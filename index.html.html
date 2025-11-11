@@ -1,0 +1,1359 @@
+<!DOCTYPE html>\n<html lang="en"><head></head><body>\n\n
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1" name="viewport">
+<title>Interactive Destinations — Bilingual</title>
+<style>
+  :root{
+    --bg:#0f172a;
+    --panel:#111827;
+    --panel-2:#1f2937;
+    --muted:#334155;
+    --text:#e5e7eb;
+    --accent:#22d3ee;
+    --accent-2:#a78bfa;
+    --card:#0b1220;
+    --success:#10b981;
+    --danger:#ef4444;
+    --warning:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+    background: linear-gradient(120deg, #0b1220, #111827);
+    color: var(--text);
+  }
+
+  .app{
+    display:grid;
+    grid-template-columns: 300px 1fr;
+    height:100vh;
+  }
+
+  /* Sidebar */
+  .sidebar{
+    background: linear-gradient(180deg, var(--panel), #0b1220 60%);
+    border-right:1px solid #1f2937;
+    padding:16px 12px 24px;
+    overflow:auto;
+  }
+  .brand{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 10px;margin-bottom:10px;
+  }
+  .brand .dot{
+    width:12px;height:12px;border-radius:3px;
+    background: linear-gradient(45deg, var(--accent), var(--accent-2));
+    box-shadow:0 0 12px rgba(34,211,238,.5);
+  }
+  .brand h1{
+    margin:0;font-size:16px;letter-spacing:.5px;font-weight:700;color:#e2e8f0
+  }
+  .search{
+    position: sticky; top: 0; background: linear-gradient(180deg, var(--panel), #0b1220);
+    padding-bottom:8px;margin-bottom:8px; z-index:2;
+  }
+  .search input{
+    width:100%;padding:10px 12px;border-radius:10px;border:1px solid #334155;
+    background:#0b1220;color:var(--text);outline:none;
+  }
+
+  .country{
+    margin: 8px 0;border:1px solid #334155;border-radius:12px; overflow:hidden;
+    background: #0b1220;
+  }
+  .country-header{
+    padding:10px 12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
+    background:linear-gradient(90deg, rgba(34,211,238,.08), rgba(167,139,250,.08));
+  }
+  .country-header:hover{filter:brightness(1.1)}
+  .submenu{
+    background: #0c162a;padding:8px;display:none;
+  }
+  .submenu.show{display:block}
+  .submenu button{
+    display:block;width:100%;text-align:left;border:0;background:transparent;color:#e5e7eb;
+    padding:8px 10px;border-radius:8px;cursor:pointer
+  }
+  .submenu button:hover{background:#0b1220}
+
+  /* Content */
+  .content{
+    display:flex;flex-direction:column;min-width:0;overflow:auto;
+  }
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;
+    padding:12px;border-bottom:1px solid #1f2937;background: linear-gradient(180deg, #0f172a, #0b1220);
+    position:sticky;top:0;z-index:3;
+  }
+  .toolbar .left, .toolbar .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn{
+    border:1px solid #334155;background:#0b1220;color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;
+  }
+  .btn:hover{filter:brightness(1.1)}
+  .btn.accent{border-color:transparent;background:linear-gradient(90deg, var(--accent), var(--accent-2));color:#0b1220}
+  .btn.badge{font-size:12px;opacity:.9}
+  .segmented{display:flex;border:1px solid #334155;border-radius:12px;overflow:hidden}
+  .segmented button{border:0;padding:8px 12px;background:#0b1220;color:#e5e7eb;cursor:pointer;min-width:70px}
+  .segmented button.active{background:linear-gradient(90deg, rgba(34,211,238,.2), rgba(167,139,250,.2));color:#fff}
+
+  .panel-wrap{padding:18px;display:grid;gap:18px}
+  .card{
+    background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+    border:1px solid #1f2937;border-radius:14px;padding:16px;box-shadow:0 10px 25px rgba(0,0,0,.25);
+  }
+  .titles{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  h2{margin:0 0 8px 0;font-size:20px}
+  h3{margin:16px 0 8px 0;font-size:16px;color:#cbd5e1}
+  .muted{color:#94a3b8;font-size:13px}
+  textarea{
+    width:100%;min-height:220px;background:#0b1220;color:#e5e7eb;border:1px solid #334155;border-radius:10px;padding:10px;resize:vertical
+  }
+  .formatbar{
+    display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px 0;align-items:center
+  }
+  .formatbar .btn{padding:6px 10px;font-size:12px}
+  .counter{font-size:12px;color:#94a3b8;margin-top:6px}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .split .lang{min-width:0}
+  .preview{
+    background:#0c162a;border:1px dashed #334155;border-radius:12px;padding:12px;white-space:pre-wrap;line-height:1.6;
+  }
+  .preview[dir="rtl"]{text-align:right}
+  .empty{opacity:.7;font-style:italic}
+  .footer{
+    font-size:12px;color:#94a3b8;padding:10px 18px;border-top:1px solid #1f2937
+  }
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #334155;background:#0b1220;font-size:12px;margin-left:auto}
+
+  /* Comments */
+  .comment-card input{width:100%;padding:8px 10px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e5e7eb}
+  .comment-card .item{
+    display:flex; gap:8px; align-items:flex-start; margin:8px 0;
+    background:#0b1220; border:1px solid #334155; border-radius:10px; padding:8px 10px;
+  }
+  .comment-card textarea{min-height:80px}
+  .comment-actions .btn{padding:6px 10px;font-size:12px}
+
+  /* Admin */
+  .admin-fab{
+    position:fixed; right:18px; bottom:18px; z-index:5;
+    background:linear-gradient(180deg, var(--accent), var(--accent-2)); color:#0b1220;
+    border:0;border-radius:999px; padding:12px 14px; font-weight:900; cursor:pointer; box-shadow:0 10px 24px rgba(34,211,238,.25);
+  }
+  .admin-panel{
+    position:fixed; right:18px; bottom:74px; z-index:6;
+    width: 520px; max-width: 92vw; max-height: 78vh;
+    background:#0b1220;border:1px solid #334155;border-radius:16px;padding:12px;display:none;
+    overflow:auto;
+  }
+  .admin-panel.show{display:block}
+  .group-title{font-weight:800;color:#cbd5e1;margin:8px 2px 4px}
+  .row{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}
+  .admin-panel input, .admin-panel select{
+    flex:1;padding:8px 10px;border-radius:10px;border:1px solid #334155;background:#0c162a;color:#e5e7eb
+  }
+  .admin-panel .btn{}
+  .danger{background: linear-gradient(90deg, rgba(239,68,68,.1), rgba(245,158,11,.1));border-color:#7f1d1d}
+  .success{background: linear-gradient(90deg, rgba(16,185,129,.1), rgba(34,197,94,.1));border-color:#065f46}
+  .muted-inline{font-size:12px;color:#94a3b8}
+
+  @media (max-width: 900px){
+    .app{grid-template-columns: 1fr}
+    .sidebar{position:fixed; left:0; top:0; bottom:0; width: 84%; transform: translateX(-105%); transition:.25s ease; z-index:7}
+    .sidebar.show{transform: translateX(0)}
+    .toolbar .left{gap:4px}
+  }
+  @media (max-width: 600px){
+    .admin-panel{ right:10px; left:10px; width:auto; max-width:none; }
+  }
+
+  /* Unsaved indicator dot on Save button */
+  #saveBtn.dirty::after{
+    content:"●"; margin-left:6px; color: var(--warning);
+  }
+</style>
+
+
+<div class="app">
+<aside class="sidebar" id="sidebar">
+<div class="search">
+<div class="brand"><div class="dot"></div><h1>Study Abroad — Booklet</h1></div>
+<input id="searchInput" placeholder="Search country, section, or content…">
+</div>
+<div id="nav"><div class="country"><div class="country-header"><span>UK</span><span>▾</span></div><div class="submenu show"><button>Overview</button><button>Why</button><button>Visa</button><button>Intakes</button><button>Entry requirements</button><button>Popular Fields of Study</button><button>Understanding Tuition Fees</button><button>Health and Additional Requirements</button><button>Visa Requirements</button><button>Partners</button><button>Your Next Steps</button></div></div><div class="country"><div class="country-header"><span>Germany</span><span>▾</span></div><div class="submenu show"><button>Overview</button><button>Why</button><button>Costs</button><button>Visa</button><button>Intakes</button></div></div><div class="country"><div class="country-header"><span>Hungary</span><span>▾</span></div><div class="submenu"><button>Overview</button><button>Why</button><button>Costs</button><button>Visa</button><button>Intakes</button></div></div><div class="country"><div class="country-header"><span>egypt</span><span>▾</span></div><div class="submenu"><button>cairo</button></div></div></div>
+</aside>
+<main class="content">
+<div class="toolbar">
+<div class="left">
+<button class="btn" id="toggleSidebar">☰ Menu</button>
+<div class="segmented" id="langSwitch">
+<button class="" data-lang="en">English</button>
+<button data-lang="ar" class="">العربية</button>
+<button class="active" data-lang="split">Split</button>
+</div>
+<span class="tag" id="crumb">UK / Visa Requirements / SPLIT</span>
+<button class="btn badge" id="copyLinkBtn" title="Copy current anchor">Copy Link</button>
+</div>
+<div class="right">
+<input id="globalSearch" placeholder="Global search…" style="padding:8px 10px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e5e7eb;min-width:200px">
+
+<button class="btn" id="exportJsonTop" title="Download JSON data">Export JSON</button>
+<button class="btn accent" id="exportBtn" title="Download this as a single HTML file">Export HTML</button>
+</div>
+</div>
+<div class="panel-wrap">
+<div class="card">
+<div class="titles">
+<h2 id="title">UK — Visa Requirements</h2>
+<span class="muted" id="hint">Anchor: <code>#UK/Visa Requirements/split</code></span>
+</div>
+<div id="editorArea"><div class="split"><div class="lang"><h3>English</h3><div class="preview" dir="ltr"><h2 style="margin:12px 0 6px">Student Visa Requirements  </h2><div></div><h3 style="margin:10px 0 4px;color:#cbd5e1">Work Permission During Study </h3><div>Undergraduate and Postgraduate:  </div><div>20 hours per week and full-time on weekends and holidays.  </div><div></div><h3 style="margin:10px 0 4px;color:#cbd5e1">Post-Study Work Visa  </h3><div>Undergraduate and Postgraduate:  </div><div>Up to 18 months to look for jobs after graduation.  </div><div></div><h3 style="margin:10px 0 4px;color:#cbd5e1">Family Members Policy  </h3><div>• Undergraduate students: Not allowed to bring any family members.  </div><div>• Postgraduate students:  </div><div>• Full-time coursework programs: Not allowed to bring family members.  </div><div>• Research-based programs: Allowed to bring family members.</div></div></div><div class="lang"><h3>العربية</h3><div class="preview" dir="rtl"><h2 style="margin:12px 0 6px">متطلبات تأشيرة الطالب  </h2><div></div><h3 style="margin:10px 0 4px;color:#cbd5e1">تصريح العمل أثناء الدراسة  </h3><div><b>طلاب البكالوريوس والدراسات العليا:</b>  </div><div>يسمح لهم بالعمل <b>20 ساعة أسبوعيًا</b> خلال فترات الدراسة، و<b>بدوام كامل</b> خلال عطلات نهاية الأسبوع والإجازات الرسمية.  </div><div></div><h3 style="margin:10px 0 4px;color:#cbd5e1">تأشيرة العمل بعد التخرج  </h3><div><b>طلاب البكالوريوس والدراسات العليا:</b>  </div><div>يمكنهم البقاء لمدة تصل إلى <b>18 شهرًا</b> بعد التخرج للبحث عن عمل.  </div><div></div><h3 style="margin:10px 0 4px;color:#cbd5e1">سياسة مرافقة أفراد العائلة  </h3><div>• <b>طلاب البكالوريوس:</b> غير مسموح لهم باصطحاب أفراد العائلة.  </div><div>• <b>طلاب الدراسات العليا:</b>  </div><div>• <b>برامج التعليم بدوام كامل (Coursework):</b> غير مسموح باصطحاب العائلة.  </div><div>• <b>برامج البحث العلمي (Research-based):</b> يُسمح باصطحاب أفراد العائلة.</div></div></div></div></div>
+</div>
+<!-- Comments Card -->
+<div class="card comment-card">
+  <h3>Comments</h3>
+  <div class="row">
+    <input id="commentAuthor" placeholder="Name…">
+  </div>
+  <div class="row">
+    <textarea id="newComment" placeholder="Write a comment…"></textarea>
+    <button class="btn" id="addCommentBtn">Add</button>
+  </div>
+  <div id="commentsList"><div class="item"><div><b>hadr</b> <span class="muted-inline">— 11/11/2025, 3:57:50 PM</span></div><textarea></textarea><div class="comment-actions"><button class="btn success">Save</button><button class="btn danger">Delete</button></div></div></div>
+</div>
+</div>
+<div class="footer">
+      Made for bilingual (EN/AR) content from your PPTX slides. This file is fully offline &amp; self-contained.
+    </div>
+</main>
+</div>
+<button class="admin-fab" id="adminFab">🛠️ Admin</button>
+<div class="admin-panel" id="adminPanel"><div class="row" id="adminAuthRow"><span class="muted-inline" id="adminStatus">Signed in as: admin</span></div><div class="group-title">Editing</div><div class="row"><button class="btn" id="editBtn">✏️ Edit</button><button class="btn success" id="saveBtn" title="Save to your browser">Save</button></div><div class="row" id="adminAuthRow"><span class="muted-inline" id="adminStatus">Signed in as: admin</span></div><div class="group-title">Editing</div><div class="row"></div><div class="row" id="adminAuthRow"><span class="muted-inline" id="adminStatus">Not signed in</span><button class="btn" id="resetBtn" title="Reset to original bilingual snapshot">Reset</button></div><div class="group-title">Editing</div><div class="row"></div>
+<div class="group-title">Structure</div>
+<div class="row">
+<label class="muted-inline"><input id="lockStructure" type="checkbox"> Lock structure</label>
+</div>
+<div class="row">
+<input id="newCountry" placeholder="Add Country e.g., UK">
+<button class="btn" id="addCountryBtn">Add Country</button>
+</div>
+<div class="row">
+<select id="countrySelect"><option value="UK">UK</option><option value="Germany">Germany</option><option value="Hungary">Hungary</option><option value="egypt">egypt</option></select>
+<input id="newSection" placeholder="Add Section e.g., Overview">
+<button class="btn" id="addSectionBtn">Add Section</button>
+</div>
+<div class="row">
+<select id="deleteCountry"><option value="UK">UK</option><option value="Germany">Germany</option><option value="Hungary">Hungary</option><option value="egypt">egypt</option></select>
+<button class="btn danger" id="deleteCountryBtn">Delete Country</button>
+</div>
+<div class="row">
+<select id="deleteSectionCountry"><option value="UK">UK</option><option value="Germany">Germany</option><option value="Hungary">Hungary</option><option value="egypt">egypt</option></select>
+<select id="deleteSection"><option value="Overview">Overview</option><option value="Why">Why</option><option value="Visa">Visa</option><option value="Intakes">Intakes</option><option value="Entry requirements">Entry requirements</option><option value="Popular Fields of Study">Popular Fields of Study</option><option value="Understanding Tuition Fees">Understanding Tuition Fees</option><option value="Health and Additional Requirements">Health and Additional Requirements</option><option value="Visa Requirements">Visa Requirements</option><option value="Partners">Partners</option><option value="Your Next Steps">Your Next Steps</option></select>
+<button class="btn danger" id="deleteSectionBtn">Delete Section</button>
+</div>
+<div class="group-title">History / Versions</div>
+<div class="row">
+<button class="btn" id="undoBtn">Undo</button>
+<button class="btn" id="redoBtn">Redo</button>
+<button class="btn" id="saveSnapshotBtn">Save Snapshot</button>
+</div>
+<div class="row">
+<select id="snapshotsList"><option value="0">11/11/2025, 3:22:36 PM — 1</option></select>
+<button class="btn" id="restoreSnapshotBtn">Restore Snapshot</button>
+<button class="btn danger" id="deleteSnapshotBtn">Delete Snapshot</button>
+</div>
+<div class="group-title">Find &amp; Replace (Global)</div>
+<div class="row">
+<input id="findText" placeholder="Find…">
+<input id="replaceText" placeholder="Replace with…">
+<button class="btn" id="findReplaceBtn">Apply</button>
+</div>
+<div class="group-title">Data</div>
+<div class="row">
+<button class="btn" id="exportJSON">Export JSON</button>
+<button class="btn" id="importJSON">Import JSON</button>
+</div>
+<div class="row" style="margin-top: 12px;"><button class="btn" id="logoutBtn">Logout</button></div><div class="row" style="margin-top: 12px;"><button class="btn" id="logoutBtn">Logout</button></div><div class="row" style="margin-top: 12px;"><button class="btn" id="logoutBtn">Logout</button></div></div>
+<script>
+const initialSnapshot = {
+  "countries": {
+    "UK": {
+      "order": [
+        "Overview",
+        "Why",
+        "Visa",
+        "Intakes",
+        "Entry requirements",
+        "Popular Fields of Study",
+        "Understanding Tuition Fees",
+        "Health and Additional Requirements",
+        "Visa Requirements",
+        "Partners",
+        "Your Next Steps"
+      ],
+      "sections": {
+        "Overview": {
+          "en": "## Location\nThe **United Kingdom (UK)** is an island country in **Northwestern Europe**, located off the **north-west coast of mainland Europe**.  \nIt is surrounded by:  \n- **Atlantic Ocean**  \n- **North Sea**  \n- **Irish Sea**  \n- **English Channel**\n\n## Capital and Largest City\n**London**\n\n## National Language\n**English**\n\n## Weather\nThe UK has **mild, wet winters** and **warm, wet summers**, with frequent **cloud cover** throughout the year.\n\n## Main Divisions \n*** England\n*** Scotland\n*** Wales\n*** Northern Ireland\n",
+          "ar": "## الموقع  \nتقع **المملكة المتحدة (UK)** في **شمال غرب أوروبا**، على الساحل **الشمالي الغربي من القارة الأوروبية**.  \nيُحيط بها:  \n- **المحيط الأطلسي**  \n- **بحر الشمال**  \n- **البحر الأيرلندي**  \n- **القناة الإنجليزية**  \n\n## العاصمة وأكبر مدينة  \n**لندن**  \n\n## اللغة الرسمية  \n**الإنجليزية**  \n\n## المناخ  \nتتمتع المملكة المتحدة بـ **شتاء معتدل ممطر** و**صيف دافئ ممطر**، مع **غطاء سحابي متكرر** طوال العام.  \n\n## الأقسام الرئيسية  \n*** إنجلترا  \n*** اسكتلندا  \n*** ويلز  \n*** أيرلندا الشمالية  \n"
+        },
+        "Why": {
+          "en": "## Why Choose the UK for Higher Education?  \n\n### World-Class Universities  \nOxford, Cambridge, and dozens of Russell Group institutions consistently rank among the globe's finest.  \n\n### Shorter Study Duration \nMost bachelor's degrees take three years; master's programmes typically last one year — saving time and money.  \n\n### Diverse Community \nStudy alongside students from over 190 countries in a welcoming, multicultural environment.  \n\n### Career Advantage  \nUK qualifications are globally recognised, opening doors to opportunities worldwide.\n",
+          "ar": "## لماذا تختار المملكة المتحدة للتعليم العالي؟  \n\n### جامعات عالمية المستوى  \nتضم جامعات **أوكسفورد** و**كامبريدج** والعشرات من جامعات **مجموعة راسل** التي تحتل باستمرار مراكز متقدمة بين أفضل الجامعات في العالم.  \n\n### مدة الدراسة الأقصر  \nتستغرق معظم برامج البكالوريوس **3 سنوات** فقط، بينما تمتد برامج الماجستير عادةً **لعام واحد** — مما يوفر الوقت والتكاليف.  \n\n### مجتمع متنوع  \nادرس جنبًا إلى جنب مع طلاب من أكثر من **190 دولة** في بيئة ترحيبية متعددة الثقافات.  \n\n### ميزة مهنية  \nتحظى المؤهلات البريطانية **باعتراف عالمي**، مما يفتح لك أبواب الفرص في مختلف أنحاء العالم.  \n"
+        },
+        "Visa": {
+          "en": "## Student Visa Requirements  \n\nOnce you receive your CAS, you'll need to apply for a Student Visa. Here's what's required:  \n\n### CAS or ICAS  \nReceive from your university after confirming your place, after paying the deposit and CAS fees.  \n\n### Bank Statement/Letter  \n£1,529 (£16,000) for London or £1,171 (£13,000) for outside London for 9 months of study.  \nPlus, the remaining tuition fees for the duration of 35 days.  \n\n### Personal Documents  \nPassport, proof of funds, and accommodation confirmation.  \n\n### Pay Fees  \nVisa application (£524) and Immigration Health Surcharge (£470/year).  \n\n### Submit & Wait  \nApply online; processing typically takes 3 weeks.  \nApproved visas are valid for 6 months, after which the student will receive their E-Visa.  \n",
+          "ar": "## متطلبات تأشيرة الطالب  \n\nبمجرد استلامك لخطاب القبول **CAS**، ستحتاج إلى التقديم للحصول على **تأشيرة طالب**. إليك ما هو مطلوب:  \n\n### CAS أو ICAS  \nيتم استلامه من الجامعة بعد تأكيد مكانك ودفع الدفعة المقدمة ورسوم الـCAS.  \n\n### كشف/خطاب بنكي  \n**1,529 جنيه إسترليني (£16,000)** إذا كنت تدرس في **لندن** أو **1,171 جنيه إسترليني (£13,000)** إذا كنت تدرس خارج لندن لتغطية **9 أشهر من الدراسة**.  \nبالإضافة إلى **الرسوم الدراسية المتبقية** لمدة **35 يومًا**.  \n\n### المستندات الشخصية  \n**جواز السفر، إثبات الأموال، وتأكيد السكن.**  \n\n### دفع الرسوم  \n**رسوم طلب التأشيرة (£524)** و**الرسوم الصحية للهجرة (£470 في السنة)**.  \n\n### التقديم والانتظار  \nقدّم الطلب عبر الإنترنت؛ تستغرق المعالجة عادةً **3 أسابيع**.  \nالتأشيرة المعتمدة تكون **صالحة لمدة 6 أشهر**، وبعدها يحصل الطالب على **التأشيرة الإلكترونية (E-Visa)**.  \n"
+        },
+        "Intakes": {
+          "en": "## Study Intakes and Key Timelines  \n\n### When You Can Start  \n- **September** — Primary intake for most programmes  \n- **November** — Secondary option available  \n- **January & February** — Limited programmes  \n\nPlan ahead: Apply 6–12 months before your intended start date.  \n\n### CAS Timeline \n**CAS (Confirmation of Acceptance for Acceptance for Studies)** is issued by your university **14–16 weeks before programme commencement.**  \n\nYour CAS is essential for your visa application — don’t delay!  \n",
+          "ar": "## مواعيد الدراسة والجداول الزمنية الأساسية  \n\n### مواعيد بدء الدراسة  \n- **سبتمبر** — الموعد الرئيسي لمعظم البرامج  \n- **نوفمبر** — خيار ثانوي متاح  \n- **يناير وفبراير** — لعدد محدود من البرامج  \n\nخطط مبكرًا: قدّم طلبك قبل **6 إلى 12 شهرًا** من تاريخ بدء الدراسة المتوقع.  \n\n### جدول إصدار CAS  \nيتم إصدار **CAS (خطاب القبول للدراسة)** من قبل الجامعة قبل **14 إلى 16 أسبوعًا من بدء البرنامج الدراسي.**  \n\nيُعد خطاب الـCAS ضروريًا لتقديم طلب التأشيرة — فلا تؤجل الإجراءات!  \n"
+        },
+        "Entry requirements": {
+          "en": "## Academic Entry Requirements  \n\n### Foundation\n- Thanawiya Amma: 60%  \n- American Diploma: GPA 2.0  \n- IGCSE: 5 OL  \n- IB: 22 Points  \n- IELTS UKVI: 4.5 to 5.5 overall (no band below 4.0–5.0).  \n\n### International Year One\n- Thanawiya Amma: TBC  \n- American Diploma: GPA 3.0  \n- IGCSE: 8 OL  \n- IB: 24 Points  \n- IELTS UKVI: 6.0 overall (no band below 5.5). Bridges to undergraduate study.  \n\n### Undergraduate  \n- Thanawiya Amma: N/A  \n- American Diploma: GPA 3.0  \n- IGCSE: 2 AL  \n- IB: 24 Points  \n- IELTS: 6.0 to 6.5 overall. Direct entry for most bachelor's degrees.  \n\n### Master's Programmes \n- GPA: 2.5 minimum (relevant major)  \n- IELTS: 6.5 overall (some programmes require 7.0). Postgraduate-level study.  \n",
+          "ar": "## متطلبات القبول الأكاديمي  \n\n### السنة التمهيدية (Foundation)  \n- الثانوية العامة: 60%  \n- الدبلومة الأمريكية: معدل تراكمي 2.0  \n- الـIGCSE: خمس مواد مستوى عادي (OL)  \n- البكالوريا الدولية (IB): 22 نقطة  \n- اختبار IELTS UKVI: بين 4.5 و5.5 بشكل عام (ولا يقل أي جزء عن 4.0–5.0).  \n\n### السنة الدولية الأولى (International Year One)  \n- الثانوية العامة: سيتم تحديدها لاحقًا  \n- الدبلومة الأمريكية: معدل تراكمي 3.0  \n- الـIGCSE: ثماني مواد مستوى عادي (OL)  \n- البكالوريا الدولية (IB): 24 نقطة  \n- اختبار IELTS UKVI: بمعدل إجمالي 6.0 (ولا يقل أي جزء عن 5.5).  \nتُعد هذه المرحلة جسرًا للانتقال إلى مرحلة البكالوريوس.  \n\n### البكالوريوس (Undergraduate)  \n- الثانوية العامة: غير متاح (N/A)  \n- الدبلومة الأمريكية: معدل تراكمي 3.0  \n- الـIGCSE: مادتان مستوى متقدم (AL)  \n- البكالوريا الدولية (IB): 24 نقطة  \n- اختبار IELTS: بين 6.0 و6.5 بشكل عام.  \nقبول مباشر لمعظم برامج البكالوريوس.  \n\n### برامج الماجستير (Master’s Programmes)  \n- المعدل التراكمي: لا يقل عن 2.5 (في تخصص ذي صلة)  \n- اختبار IELTS: بمعدل إجمالي 6.5 (وقد تتطلب بعض البرامج 7.0).  \nدراسة على مستوى الدراسات العليا.  \n"
+        },
+        "Popular Fields of Study": {
+          "en": "## Popular Fields of Study  \n\n### Medicine & Health  \nLeading research institutions with clinical placements across the NHS.  \n\n### Engineering  \nCutting-edge facilities and strong links to industry leaders.  \n\n### Business & Management \nMBA and business degrees recognised across global markets.  \n\n### Sciences  \nPhysics, chemistry, and biology programmes with world-class research opportunities.  \n",
+          "ar": "## المجالات الدراسية الشائعة  \n\n### الطب والرعاية الصحية  \nتضم المملكة المتحدة مؤسسات بحثية رائدة توفر **تدريبًا عمليًا في المستشفيات التابعة لـNHS**.  \n\n### الهندسة  \nمرافق متطورة وروابط قوية مع **كبار الشركات الصناعية** في مختلف التخصصات الهندسية.  \n\n### إدارة الأعمال  \nبرامج **MBA** ودرجات البزنس تحظى **باعتراف واسع في الأسواق العالمية**.  \n\n### العلوم  \nبرامج **الفيزياء والكيمياء والأحياء** تقدم فرصًا متميزة **للبحث العلمي على مستوى عالمي**.  \n"
+        },
+        "Understanding Tuition Fees": {
+          "en": "## Understanding Tuition Fees  \n\n### Undergraduate\nAverage annual tuition fees: **$15,000**  \n\n### Medicine  \nAverage annual tuition fees: **$35,000 – $40,000**  \n\n### Master’s (Taught)  \nAverage annual tuition fees: **$15,000 – $20,000**  \n\n### Pre-Master’s  \nAverage annual tuition fees: **$10,000 – $12,000**  \n",
+          "ar": "## فهم الرسوم الدراسية  \n\n### البكالوريوس  \nمتوسط الرسوم الدراسية السنوية: **15,000 دولار أمريكي**  \n\n### الطب  \nمتوسط الرسوم الدراسية السنوية: **35,000 – 40,000 دولار أمريكي**  \n\n### الماجستير (نظام التدريس المباشر)  \nمتوسط الرسوم الدراسية السنوية: **15,000 – 20,000 دولار أمريكي**  \n\n### ما قبل الماجستير (Pre-Master’s)  \nمتوسط الرسوم الدراسية السنوية: **10,000 – 12,000 دولار أمريكي**  \n"
+        },
+        "Health and Additional Requirements": {
+          "en": "## Health and Additional Requirements  \n\n### What You Need to Know \n\n- **Immigration Health Surcharge (IHS):** £776 per year — grants access to the NHS.  \n- **Tuberculosis Test:** Required if you're from a high-risk country; most visas now require a TB certificate.  \n- **Police Clearance:** Some universities request a police certificate of good conduct.  \n- **Financial Consent Letter:** Required if you're under 18.  \n- **Parental Consent Letter:** Required if you're under 18.  \n",
+          "ar": "## المتطلبات الصحية والإضافية  \n\n### ما يجب أن تعرفه  \n\n- **رسوم الرعاية الصحية للهجرة (IHS):** تبلغ **£776 سنويًا** — وتمنحك حق الوصول إلى خدمات **NHS**.  \n- **اختبار السل (Tuberculosis Test):** مطلوب إذا كنت من دولة عالية الخطورة؛ إذ تطلب معظم التأشيرات الآن **شهادة خلو من السل (TB Certificate)**.  \n- **شهادة حسن السيرة والسلوك:** تطلبها بعض الجامعات كإثبات للسجل الجنائي النظيف.  \n- **خطاب الموافقة المالية:** مطلوب إذا كان عمرك **أقل من 18 عامًا**.  \n- **خطاب موافقة الوالدين:** مطلوب أيضًا إذا كان عمرك **أقل من 18 عامًا**.  \n"
+        },
+        "Visa Requirements": {
+          "en": "## Student Visa Requirements  \n\n### Work Permission During Study \nUndergraduate and Postgraduate:  \n20 hours per week and full-time on weekends and holidays.  \n\n### Post-Study Work Visa  \nUndergraduate and Postgraduate:  \nUp to 18 months to look for jobs after graduation.  \n\n### Family Members Policy  \n- Undergraduate students: Not allowed to bring any family members.  \n- Postgraduate students:  \n  - Full-time coursework programs: Not allowed to bring family members.  \n  - Research-based programs: Allowed to bring family members.  \n",
+          "ar": "## متطلبات تأشيرة الطالب  \n\n### تصريح العمل أثناء الدراسة  \n**طلاب البكالوريوس والدراسات العليا:**  \nيسمح لهم بالعمل **20 ساعة أسبوعيًا** خلال فترات الدراسة، و**بدوام كامل** خلال عطلات نهاية الأسبوع والإجازات الرسمية.  \n\n### تأشيرة العمل بعد التخرج  \n**طلاب البكالوريوس والدراسات العليا:**  \nيمكنهم البقاء لمدة تصل إلى **18 شهرًا** بعد التخرج للبحث عن عمل.  \n\n### سياسة مرافقة أفراد العائلة  \n- **طلاب البكالوريوس:** غير مسموح لهم باصطحاب أفراد العائلة.  \n- **طلاب الدراسات العليا:**  \n  - **برامج التعليم بدوام كامل (Coursework):** غير مسموح باصطحاب العائلة.  \n  - **برامج البحث العلمي (Research-based):** يُسمح باصطحاب أفراد العائلة.  \n"
+        },
+        "Partners": {
+          "en": "## Partners with Us  \n\n### Pathways  \n- Study Group “Provider”  \n- Oncampus Global “Provider”  \n- QA “Provider”  \n- Malvern  \n\n### Partners \n- QS  \n- CTC  \n- Edvoy  \n- Leverage  \n- LCI  \n",
+          "ar": "## شركاؤنا  \n\n### برامج Pathways  \n- **Study Group** \"مزود خدمات تعليمية\"  \n- **Oncampus Global** \"مزود خدمات تعليمية\"  \n- **QA** \"مزود خدمات تعليمية\"  \n- **Malvern**  \n\n### الشركاء  \n- **QS**  \n- **CTC**  \n- **Edvoy**  \n- **Leverage**  \n- **LCI**  \n"
+        },
+        "Your Next Steps": {
+          "en": "## Your Next Steps  \n\nReady to apply? Here's your action plan:  \n\n### 1. Research Universities  \nExplore courses, rankings, and campus cultures that match your goals.  \n\n### 2. Prepare Qualifications  \nTake IELTS, gather transcripts, and complete any required aptitude tests.  \n\n### 3. Apply Early  \nSubmit applications 6–12 months before your intended start date for the best outcomes.  \n\n### 4. Receive CAS & Apply for Visa  \nOnce accepted, secure your CAS and submit your visa application promptly.  \n\n### 5. Begin Your Adventure  \nArrive in the UK, explore your new home, and embrace an unforgettable educational journey.  \n",
+          "ar": "## خطواتك التالية  \n\nهل أنت مستعد للتقديم؟ إليك خطة العمل الخاصة بك:  \n\n### 1. ابحث عن الجامعات  \nاستكشف **التخصصات، التصنيفات، وحياة الحرم الجامعي** لتجد ما يناسب أهدافك.  \n\n### 2. جهّز مؤهلاتك  \nخُض اختبار **IELTS**، واجمع **الكشوف الدراسية**، واستكمل أي **اختبارات قدرات مطلوبة**.  \n\n### 3. قدّم مبكرًا  \nقدّم طلبك قبل **6 إلى 12 شهرًا** من موعد بدء الدراسة للحصول على أفضل فرصة قبول.  \n\n### 4. استلم خطاب القبول (CAS) وقدّم على التأشيرة  \nبعد القبول، احصل على **خطاب الـCAS** وقدّم **طلب التأشيرة** في أقرب وقت ممكن.  \n\n### 5. ابدأ مغامرتك  \nسافر إلى **المملكة المتحدة**، واستكشف **منزلك الجديد**، وابدأ **رحلة تعليمية لا تُنسى**.  \n"
+        }
+      }
+    },
+    "Germany": {
+      "order": [
+        "Overview",
+        "Why",
+        "Costs",
+        "Visa",
+        "Intakes"
+      ],
+      "sections": {
+        "Overview": {
+          "en": "",
+          "ar": ""
+        },
+        "Why": {
+          "en": "",
+          "ar": ""
+        },
+        "Costs": {
+          "en": "",
+          "ar": ""
+        },
+        "Visa": {
+          "en": "",
+          "ar": ""
+        },
+        "Intakes": {
+          "en": "",
+          "ar": ""
+        }
+      }
+    },
+    "Hungary": {
+      "order": [
+        "Overview",
+        "Why",
+        "Costs",
+        "Visa",
+        "Intakes"
+      ],
+      "sections": {
+        "Overview": {
+          "en": "",
+          "ar": ""
+        },
+        "Why": {
+          "en": "",
+          "ar": ""
+        },
+        "Costs": {
+          "en": "",
+          "ar": ""
+        },
+        "Visa": {
+          "en": "",
+          "ar": ""
+        },
+        "Intakes": {
+          "en": "",
+          "ar": ""
+        }
+      }
+    },
+    "egypt": {
+      "order": [
+        "cairo"
+      ],
+      "sections": {
+        "cairo": {
+          "en": "",
+          "ar": ""
+        }
+      }
+    }
+  },
+  "order": [
+    "UK",
+    "Germany",
+    "Hungary",
+    "egypt"
+  ]
+};
+
+const STORAGE_KEY = "destinations_bilingual_data_v1";
+const LANG_KEY = "destinations_bilingual_lang";
+const SNAPSHOTS_KEY = "destinations_bilingual_snapshots_v1";
+const COMMENTS_KEY = "destinations_bilingual_comments_v1";
+let data = loadData();
+let snapshots = loadSnapshots();
+let comments = loadComments();
+let current = { country: null, section: null, mode: getSavedLang() || "en" };
+let dirty = false;
+let undoStack = [];
+let redoStack = [];
+let structureLocked = false;
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return structuredClone(initialSnapshot);
+    const parsed = JSON.parse(raw);
+    if(!parsed || !parsed.countries) throw new Error("bad shape");
+    return parsed;
+  }catch(e){
+    return structuredClone(initialSnapshot);
+  }
+}
+function saveData(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  setDirty(false);
+}
+function saveLang(lang){ localStorage.setItem(LANG_KEY, lang); }
+function getSavedLang(){ return localStorage.getItem(LANG_KEY); }
+function loadSnapshots(){ try{ return JSON.parse(localStorage.getItem(SNAPSHOTS_KEY)||"[]"); }catch(e){ return []; } }
+function saveSnapshots(){ localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(snapshots)); }
+function loadComments(){ try{ return JSON.parse(localStorage.getItem(COMMENTS_KEY)||"[]"); }catch(e){ return []; } }
+function saveComments(){ localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments)); }
+function pushUndo(){ undoStack.push(structuredClone(data)); if(undoStack.length>30) undoStack.shift(); redoStack.length=0; }
+function undo(){ if(!undoStack.length) return; const prev=undoStack.pop(); redoStack.push(structuredClone(data)); data=prev; saveData(); buildNav(searchInput.value); renderContent(); }
+function redo(){ if(!redoStack.length) return; const next=redoStack.pop(); undoStack.push(structuredClone(data)); data=next; saveData(); buildNav(searchInput.value); renderContent(); }
+function setDirty(v){ dirty=v; document.getElementById("saveBtn").classList.toggle("dirty", v); }
+
+const navEl = document.getElementById("nav");
+const crumb = document.getElementById("crumb");
+const searchInput = document.getElementById("searchInput");
+const globalSearch = document.getElementById("globalSearch");
+const sidebar = document.getElementById("sidebar");
+
+function buildNav(filter=""){
+  navEl.innerHTML = "";
+  const q = filter.trim().toLowerCase();
+  const countries = data.order || Object.keys(data.countries);
+  countries.forEach(country=>{
+    const countryObj = data.countries[country];
+    const sections = countryObj.order || Object.keys(countryObj.sections);
+    const matchesCountry = country.toLowerCase().includes(q);
+    const visibleSections = sections.filter(s => {
+      if(!q) return true;
+      const matchByName = s.toLowerCase().includes(q) || matchesCountry;
+      if(matchByName) return true;
+      const entry = countryObj.sections[s];
+      const en = (entry?.en||"").toLowerCase();
+      const ar = (entry?.ar||"").toLowerCase();
+      return en.includes(q) || ar.includes(q);
+    });
+    if(q && !matchesCountry && visibleSections.length===0) return;
+
+    const wrap = document.createElement("div");
+    wrap.className = "country";
+    const head = document.createElement("div");
+    head.className = "country-header";
+    head.innerHTML = `<span>${country}</span><span>▾</span>`;
+    wrap.appendChild(head);
+
+    const sub = document.createElement("div");
+    sub.className = "submenu";
+    visibleSections.forEach(section=>{
+      const btn = document.createElement("button");
+      btn.textContent = section;
+      btn.addEventListener("click", ()=>navigateTo(country, section, current.mode));
+      sub.appendChild(btn);
+    });
+    wrap.appendChild(sub);
+    head.addEventListener("click", ()=>{ sub.classList.toggle("show"); });
+    navEl.appendChild(wrap);
+  });
+
+  refreshAdminSelectors();
+  refreshDeleteSelectors();
+  refreshSnapshotsList();
+}
+
+function refreshAdminSelectors(){
+  const sel = document.getElementById("countrySelect");
+  const prev = sel.value;
+  sel.innerHTML = "";
+  (data.order || Object.keys(data.countries)).forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c; opt.textContent = c; sel.appendChild(opt);
+  });
+  if(prev && [...sel.options].some(o=>o.value===prev)) sel.value = prev;
+}
+function populateDeleteSectionOptions(country){
+  const ds = document.getElementById("deleteSection");
+  ds.innerHTML = "";
+  const c = data.countries[country];
+  if(!c) return;
+  const order = c.order || Object.keys(c.sections);
+  order.forEach(s=>{
+    const o = document.createElement("option"); o.value=s; o.textContent=s; ds.appendChild(o);
+  });
+}
+function refreshDeleteSelectors(){
+  const dc = document.getElementById("deleteCountry");
+  const dsc = document.getElementById("deleteSectionCountry");
+  const prevCountryDC = dc.value;
+  const prevCountryDSC = dsc.value;
+  dc.innerHTML = ""; dsc.innerHTML = "";
+  (data.order || Object.keys(data.countries)).forEach(c => {
+    const o = document.createElement("option"); o.value=c; o.textContent=c; dc.appendChild(o);
+    const o2= document.createElement("option"); o2.value=c; o2.textContent=c; dsc.appendChild(o2);
+  });
+  if(prevCountryDC && [...dc.options].some(o=>o.value===prevCountryDC)) dc.value = prevCountryDC;
+  if(prevCountryDSC && [...dsc.options].some(o=>o.value===prevCountryDSC)) dsc.value = prevCountryDSC;
+  populateDeleteSectionOptions(dsc.value || (data.order && data.order[0]));
+}
+document.getElementById("deleteSectionCountry").addEventListener("change", (e)=>{
+  populateDeleteSectionOptions(e.target.value);
+});
+
+function parseHash(){
+  const hash = decodeURIComponent(location.hash.replace(/^#/,""));
+  if(!hash) return null;
+  const parts = hash.split("/");
+  if(parts.length < 3) return null;
+  return { country: parts[0], section: parts[1], mode: parts[2] };
+}
+function setHash(country, section, mode){
+  const raw = `#${encodeURIComponent(country)}/${encodeURIComponent(section)}/${encodeURIComponent(mode)}`;
+  if(location.hash !== raw) location.hash = raw;
+}
+window.addEventListener("hashchange", ()=>{
+  const parsed = parseHash();
+  if(parsed){
+    current = parsed;
+    saveLang(current.mode);
+    renderContent();
+    updateCrumb();
+  }
+});
+function navigateTo(country, section, mode){ setHash(country, section, mode); }
+
+const editorArea = document.getElementById("editorArea");
+const titleEl = document.getElementById("title");
+const hintEl  = document.getElementById("hint");
+
+function updateCrumb(){
+  if(current.country && current.section){
+    crumb.textContent = `${current.country} / ${current.section} / ${current.mode.toUpperCase()}`;
+  }else{
+    crumb.textContent = "";
+  }
+}
+
+function wrapSelection(el, before, after){
+  const start = el.selectionStart ?? 0;
+  const end   = el.selectionEnd ?? 0;
+  const val   = el.value || "";
+  const selected = val.slice(start, end);
+  const replacement = before + selected + after;
+  el.value = val.slice(0,start) + replacement + val.slice(end);
+  el.selectionStart = start;
+  el.selectionEnd   = start + replacement.length;
+  el.focus();
+  el.dispatchEvent(new Event("input"));
+}
+function applyFormat(el, action){
+  if(!el) return;
+  if(action==="bold"){ wrapSelection(el, "**","**"); return; }
+  if(action==="italic"){ wrapSelection(el, "*","*"); return; }
+  if(action==="underline"){ wrapSelection(el, "[u]","[/u]"); return; }
+  if(action==="size-sm"){ wrapSelection(el, "[size=sm]","[/size]"); return; }
+  if(action==="size-md"){ wrapSelection(el, "[size=md]","[/size]"); return; }
+  if(action==="size-lg"){ wrapSelection(el, "[size=lg]","[/size]"); return; }
+  if(action==="size-xl"){ wrapSelection(el, "[size=xl]","[/size]"); return; }
+  const lines = (el.value||"").split(/\r?\n/);
+  let out = [];
+  if(action==="bullets"){
+    out = lines.map(l=> l.trim() ? `- ${l.replace(/^\s*[-\d.\)]+?\s*/,'')}` : "");
+  }else if(action==="numbers"){
+    let i=1; out = lines.map(l=> l.trim() ? `${i++}. ${l.replace(/^\s*[-\d.\)]+?\s*/,'')}` : "");
+  }else if(action==="tidy"){
+    out = lines.map(l=> l.replace(/\s+/g,' ').trim());
+  }else if(action==="h2" || action==="h3" || action==="text"){
+    out = lines.map(l=>{
+      const t = l.replace(/^\s*(?:##?#?\s*)?/, '');
+      if(action==="h2") return `## ${t}`;
+      if(action==="h3") return `### ${t}`;
+      return t;
+    });
+  }
+  el.value = out.join("\n");
+  el.dispatchEvent(new Event("input"));
+}
+function updateCounter(el, counterId){
+  const t = el.value||"";
+  const words = (t.trim().match(/\S+/g)||[]).length;
+  const chars = t.length;
+  const lines = t.split(/\r?\n/).length;
+  const c = document.getElementById(counterId);
+  if(c) c.textContent = `Words: ${words} • Chars: ${chars} • Lines: ${lines}`;
+}
+function renderContent(){
+  if(!current.country || !current.section){
+    titleEl.textContent = "Welcome";
+    hintEl.textContent  = "Choose a section from the left.";
+    editorArea.innerHTML = "";
+    return;
+  }
+  titleEl.textContent = `${current.country} — ${current.section}`;
+  hintEl.innerHTML = `Anchor: <code>#${current.country}/${current.section}/${current.mode}</code>`;
+
+  const entry = data.countries?.[current.country]?.sections?.[current.section];
+  if(!entry){
+    editorArea.innerHTML = `<div class="muted">This section is empty. Use Edit to add content.</div>`;
+    return;
+  }
+
+  const isEdit = editMode;
+  editorArea.innerHTML = "";
+
+  function bindDirty(el){
+    if(!el) return;
+    el.addEventListener("input", ()=>{
+      setDirty(true);
+      updateCounter(el, el.id + "_counter");
+    });
+    el.addEventListener("change", ()=> setDirty(true));
+  }
+  function formatBar(targetId){
+    return `<div class="formatbar">
+      <button class="btn" data-act="h2" data-target="${targetId}">H2</button>
+      <button class="btn" data-act="h3" data-target="${targetId}">H3</button>
+      <button class="btn" data-act="text" data-target="${targetId}">Text</button>
+      <span class="muted">|</span>
+      <button class="btn" data-act="bold" data-target="${targetId}"><b>B</b></button>
+      <button class="btn" data-act="italic" data-target="${targetId}"><i>I</i></button>
+      <button class="btn" data-act="underline" data-target="${targetId}"><u>U</u></button>
+      <span class="muted">|</span>
+      <button class="btn" data-act="size-sm" data-target="${targetId}">A-</button>
+      <button class="btn" data-act="size-md" data-target="${targetId}">A</button>
+      <button class="btn" data-act="size-lg" data-target="${targetId}">A+</button>
+      <button class="btn" data-act="size-xl" data-target="${targetId}">A++</button>
+      <span class="muted">|</span>
+      <button class="btn" data-act="bullets" data-target="${targetId}">• Bullets</button>
+      <button class="btn" data-act="numbers" data-target="${targetId}">1. Numbers</button>
+      <button class="btn" data-act="tidy" data-target="${targetId}">↺ Tidy</button>
+    </div>`;
+  }
+
+  if(current.mode === "split"){
+    const wrap = document.createElement("div");
+    wrap.className = "split";
+
+    const langEn = document.createElement("div");
+    langEn.className = "lang";
+    langEn.innerHTML = `<h3>English</h3>` + (isEdit
+      ? `${formatBar("enField")}<textarea id="enField">${escapeHtml(entry.en||"")}</textarea><div class="counter" id="enField_counter"></div>`
+      : `<div class="preview" dir="ltr">${renderPreview(entry.en)}</div>`);
+    wrap.appendChild(langEn);
+
+    const langAr = document.createElement("div");
+    langAr.className = "lang";
+    langAr.innerHTML = `<h3>العربية</h3>` + (isEdit
+      ? `${formatBar("arField")}<textarea id="arField" dir="rtl" style="text-align:right">${escapeHtml(entry.ar||"")}</textarea><div class="counter" id="arField_counter"></div>`
+      : `<div class="preview" dir="rtl">${renderPreview(entry.ar,true)}</div>`);
+    wrap.appendChild(langAr);
+
+    editorArea.appendChild(wrap);
+    if(isEdit){
+      const en = document.getElementById("enField");
+      const ar = document.getElementById("arField");
+      bindDirty(en); bindDirty(ar);
+      updateCounter(en, "enField_counter");
+      updateCounter(ar, "arField_counter");
+    }
+  }else if(current.mode === "en"){
+    const block = document.createElement("div");
+    block.innerHTML = (isEdit
+      ? `${formatBar("enField")}<textarea id="enField">${escapeHtml(entry.en||"")}</textarea><div class="counter" id="enField_counter"></div>`
+      : `<div class="preview" dir="ltr">${renderPreview(entry.en)}</div>`);
+    editorArea.appendChild(block);
+    if(isEdit){
+      const en = document.getElementById("enField");
+      bindDirty(en); updateCounter(en, "enField_counter");
+    }
+  }else{
+    const block = document.createElement("div");
+    block.innerHTML = (isEdit
+      ? `${formatBar("arField")}<textarea id="arField" dir="rtl" style="text-align:right">${escapeHtml(entry.ar||"")}</textarea><div class="counter" id="arField_counter"></div>`
+      : `<div class="preview" dir="rtl">${renderPreview(entry.ar,true)}</div>`);
+    editorArea.appendChild(block);
+    if(isEdit){
+      const ar = document.getElementById("arField");
+      bindDirty(ar); updateCounter(ar, "arField_counter");
+    }
+  }
+
+  if(isEdit){
+    editorArea.querySelectorAll(".formatbar .btn").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        const id = b.getAttribute("data-target");
+        const act = b.getAttribute("data-act");
+        applyFormat(document.getElementById(id), act);
+      });
+    });
+  }
+}
+
+function escapeHtml(str){
+  return (str||"").replace(/[&<>"']/g, s => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+  })[s]);
+}
+function renderPreview(text, rtl=false){
+  const t = (text||"").trim();
+  if(!t) return `<div class="empty">${rtl ? "— لا يوجد محتوى بعد —" : "— No content yet —"}</div>`;
+  const lines = t.split(/\r?\n/);
+  return lines.map(line=>{
+    if(/^##\s+/.test(line)) return `<h2 style="margin:12px 0 6px">${escapeHtml(line.replace(/^##\s+/,""))}</h2>`;
+    if(/^###\s+/.test(line)) return `<h3 style="margin:10px 0 4px;color:#cbd5e1">${escapeHtml(line.replace(/^###\s+/,""))}</h3>`;
+    let safe = escapeHtml(line);
+    safe = safe.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    safe = safe.replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\w)/g, (m, p1, p2)=> `${p1}<i>${p2}</i>`);
+    safe = safe.replace(/\[u\](.+?)\[\/u\]/g, "<u>$1</u>");
+    safe = safe.replace(/\[size=(sm|md|lg|xl)\]([\s\S]*?)\[\/size\]/g, (m, sz, inner)=>{
+      const map = { sm:"0.9em", md:"1.0em", lg:"1.15em", xl:"1.35em" };
+      return `<span style="font-size:${map[sz]||'1em'}">${inner}</span>`;
+    });
+    if(/^\s*[-•▪]/.test(line)){
+      safe = safe.replace(/^\s*[-•▪]\s*/, "");
+      return `<div>• ${safe}</div>`;
+    }
+    return `<div>${safe}</div>`;
+  }).join("");
+}
+
+const langSwitch = document.getElementById("langSwitch");
+langSwitch.addEventListener("click", (e)=>{
+  if(e.target.tagName !== "BUTTON") return;
+  const lang = e.target.dataset.lang;
+  [...langSwitch.children].forEach(b => b.classList.toggle("active", b.dataset.lang===lang));
+  current.mode = lang;
+  saveLang(lang);
+  if(current.country && current.section){ setHash(current.country, current.section, current.mode); }
+  else { renderContent(); }
+});
+
+document.getElementById("copyLinkBtn").addEventListener("click", async ()=>{
+  try{
+    await navigator.clipboard.writeText(location.href);
+    document.getElementById("copyLinkBtn").textContent = "Copied ✓";
+    setTimeout(()=> document.getElementById("copyLinkBtn").textContent = "Copy Link", 1200);
+  }catch(e){ alert("Couldn't copy. You can still copy the URL bar."); }
+});
+
+function hydrateLangButtons(){
+  const lang = current.mode;
+  [...langSwitch.children].forEach(b => b.classList.toggle("active", b.dataset.lang===lang));
+}
+
+let editMode = false;
+const editBtn = document.getElementById("editBtn");
+const saveBtn = document.getElementById("saveBtn");
+const resetBtn = document.getElementById("resetBtn");
+const exportBtn = document.getElementById("exportBtn");
+
+editBtn.addEventListener("click", ()=>{
+  editMode = !editMode;
+  editBtn.textContent = editMode ? "✅ Done" : "✏️ Edit";
+  renderContent();
+});
+function performSave(){
+  if(!current.country || !current.section){ alert("Select a section first."); return; }
+  pushUndo();
+  const entry = data.countries[current.country].sections[current.section];
+  const enField = document.getElementById("enField");
+  const arField = document.getElementById("arField");
+  if(enField) entry.en = enField.value;
+  if(arField) entry.ar = arField.value;
+  saveData();
+  editMode = false;
+  editBtn.textContent = "✏️ Edit";
+  renderContent();
+  alert("Saved to your browser.");
+}
+saveBtn.addEventListener("click", performSave);
+window.addEventListener("keydown", (e)=>{
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s"){
+    e.preventDefault(); performSave();
+  }
+});
+window.addEventListener("beforeunload", (e)=>{ if(dirty){ e.preventDefault(); e.returnValue = ""; }});
+resetBtn.addEventListener("click", ()=>{
+  if(!confirm("Reset to the original bilingual snapshot?")) return;
+  pushUndo();
+  data = structuredClone(initialSnapshot);
+  saveData();
+  buildNav(searchInput.value);
+  if(current.country && current.section){ renderContent(); }
+});
+exportBtn.addEventListener("click", ()=>{
+  const html = buildExportHtml();
+  const blob = new Blob([html], {type:"text/html"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "interactive_destinations_bilingual.html";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+});
+function buildExportHtml(){
+  const serializer = (obj)=>JSON.stringify(obj, null, 2);
+  const html = document.documentElement.outerHTML.replace(
+    /const initialSnapshot = {[\s\S]*?};/,
+    "const initialSnapshot = " + serializer(data) + ";"
+  );
+  return "<!DOCTYPE html>\n" + html;
+}
+
+const adminFab = document.getElementById("adminFab");
+const adminPanel = document.getElementById("adminPanel");
+const addCountryBtn = document.getElementById("addCountryBtn");
+const addSectionBtn = document.getElementById("addSectionBtn");
+const exportJSONBtn  = document.getElementById("exportJSON");
+const importJSONBtn  = document.getElementById("importJSON");
+const lockStructureChk = document.getElementById("lockStructure");
+
+const deleteCountrySel = document.getElementById("deleteCountry");
+const deleteCountryBtn = document.getElementById("deleteCountryBtn");
+const deleteSectionCountrySel = document.getElementById("deleteSectionCountry");
+const deleteSectionSel = document.getElementById("deleteSection");
+const deleteSectionBtn = document.getElementById("deleteSectionBtn");
+
+const undoBtn = document.getElementById("undoBtn");
+const redoBtn = document.getElementById("redoBtn");
+const saveSnapshotBtn = document.getElementById("saveSnapshotBtn");
+const snapshotsList = document.getElementById("snapshotsList");
+const restoreSnapshotBtn = document.getElementById("restoreSnapshotBtn");
+const deleteSnapshotBtn = document.getElementById("deleteSnapshotBtn");
+
+const findTextInp = document.getElementById("findText");
+const replaceTextInp = document.getElementById("replaceText");
+const findReplaceBtn = document.getElementById("findReplaceBtn");
+
+adminFab.addEventListener("click", ()=>{
+  adminPanel.classList.toggle("show");
+  if(adminPanel.classList.contains("show")){
+    requestAnimationFrame(()=>{
+      const rect = adminPanel.getBoundingClientRect();
+      if(rect.right > window.innerWidth - 10){
+        adminPanel.style.right = "10px";
+      }
+    });
+  }
+});
+document.getElementById("toggleSidebar").addEventListener("click", ()=>{
+  sidebar.classList.toggle("show");
+});
+function ensureUnlocked(){
+  if(structureLocked){ alert("Structure is locked. Disable 'Lock structure' to modify countries/sections."); return false; }
+  return true;
+}
+addCountryBtn.addEventListener("click", ()=>{
+  if(!ensureUnlocked()) return;
+  const name = (document.getElementById("newCountry").value||"").trim();
+  if(!name) return alert("Enter a country name.");
+  if(data.countries[name]) return alert("Country already exists.");
+  pushUndo();
+  data.countries[name] = { order: [], sections: {} };
+  data.order = data.order || [];
+  data.order.push(name);
+  saveData();
+  buildNav(searchInput.value);
+  document.getElementById("newCountry").value = "";
+});
+addSectionBtn.addEventListener("click", ()=>{
+  if(!ensureUnlocked()) return;
+  const country = document.getElementById("countrySelect").value;
+  const section = (document.getElementById("newSection").value||"").trim();
+  if(!country || !section) return alert("Choose country and enter section.");
+  const c = data.countries[country];
+  if(!c.sections[section]){
+    pushUndo();
+    c.sections[section] = { en:"", ar:"" };
+    c.order = c.order || [];
+    c.order.push(section);
+    saveData();
+    buildNav(searchInput.value);
+    document.getElementById("newSection").value = "";
+  }else{
+    alert("Section already exists.");
+  }
+});
+deleteCountryBtn.addEventListener("click", ()=>{
+  if(!ensureUnlocked()) return;
+  const country = deleteCountrySel.value;
+  if(!country) return;
+  if(!confirm(`Delete country "${country}" and all its sections?`)) return;
+  pushUndo();
+  delete data.countries[country];
+  data.order = (data.order||[]).filter(c=>c!==country);
+  saveData();
+  buildNav(searchInput.value);
+  if(current.country===country){
+    current = { country: null, section: null, mode: current.mode };
+    renderContent();
+  }
+});
+deleteSectionBtn.addEventListener("click", ()=>{
+  if(!ensureUnlocked()) return;
+  const country = deleteSectionCountrySel.value;
+  const section = deleteSectionSel.value;
+  if(!country || !section) return;
+  if(!confirm(`Delete section "${section}" in "${country}"?`)) return;
+  pushUndo();
+  const c = data.countries[country];
+  delete c.sections[section];
+  c.order = (c.order||[]).filter(s=>s!==section);
+  saveData();
+  buildNav(searchInput.value);
+  if(current.country===country && current.section===section){
+    current = { country, section: (c.order[0]||Object.keys(c.sections)[0]||null), mode: current.mode };
+    renderContent();
+  }
+});
+lockStructureChk.addEventListener("change", (e)=>{ structureLocked = e.target.checked; });
+
+undoBtn.addEventListener("click", ()=> undo());
+redoBtn.addEventListener("click", ()=> redo());
+saveSnapshotBtn.addEventListener("click", ()=>{
+  const label = prompt("Snapshot label (optional):","");
+  const snap = { time: Date.now(), label: label||"", data: structuredClone(data) };
+  snapshots.push(snap);
+  if(snapshots.length>20) snapshots.shift();
+  saveSnapshots();
+  refreshSnapshotsList();
+  alert("Snapshot saved.");
+});
+function refreshSnapshotsList(){
+  const list = document.getElementById("snapshotsList");
+  list.innerHTML = "";
+  snapshots.forEach((snap, idx)=>{
+    const opt = document.createElement("option");
+    const dt  = new Date(snap.time);
+    opt.value = idx;
+    opt.textContent = `${dt.toLocaleString()} — ${snap.label||"Snapshot"}`;
+    list.appendChild(opt);
+  });
+}
+document.getElementById("restoreSnapshotBtn").addEventListener("click", ()=>{
+  const idx = parseInt(document.getElementById("snapshotsList").value);
+  if(isNaN(idx)) return alert("Choose a snapshot.");
+  if(!confirm("Restore this snapshot? Current changes will be replaced.")) return;
+  pushUndo();
+  data = structuredClone(snapshots[idx].data);
+  saveData();
+  buildNav(searchInput.value);
+  renderContent();
+});
+document.getElementById("deleteSnapshotBtn").addEventListener("click", ()=>{
+  const idx = parseInt(document.getElementById("snapshotsList").value);
+  if(isNaN(idx)) return alert("Choose a snapshot.");
+  snapshots.splice(idx,1);
+  saveSnapshots();
+  refreshSnapshotsList();
+});
+
+findReplaceBtn.addEventListener("click", ()=>{
+  const f = (findTextInp.value||"");
+  const r = (replaceTextInp.value||"");
+  if(!f) return alert("Enter text to find.");
+  pushUndo();
+  const re = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g");
+  (data.order || Object.keys(data.countries)).forEach(cn=>{
+    const c = data.countries[cn];
+    (c.order || Object.keys(c.sections)).forEach(sn=>{
+      const s = c.sections[sn];
+      if(typeof s.en === "string") s.en = s.en.replace(re, r);
+      if(typeof s.ar === "string") s.ar = s.ar.replace(re, r);
+    });
+  });
+  saveData();
+  buildNav(searchInput.value);
+  renderContent();
+  alert("Find & Replace done.");
+});
+
+const commentsList = document.getElementById("commentsList");
+const addCommentBtn = document.getElementById("addCommentBtn");
+const newCommentInp = document.getElementById("newComment");
+function renderComments(){
+  commentsList.innerHTML = "";
+  if(!comments.length){
+    commentsList.innerHTML = `<div class="muted">No comments yet.</div>`;
+    return;
+  }
+  comments.forEach((c, idx)=>{
+    const item = document.createElement("div");
+    item.className = "item";
+    const ta = document.createElement("textarea");
+    ta.value = c.text;
+    ta.addEventListener("input", ()=> c.text = ta.value);
+    const actions = document.createElement("div");
+    actions.className = "comment-actions";
+    const saveB = document.createElement("button");
+    saveB.className = "btn success"; saveB.textContent = "Save";
+    saveB.addEventListener("click", ()=>{ comments[idx].text = ta.value; saveComments(); renderComments(); });
+    const delB = document.createElement("button");
+    delB.className = "btn danger"; delB.textContent = "Delete";
+    delB.addEventListener("click", ()=>{ comments.splice(idx,1); saveComments(); renderComments(); });
+    actions.appendChild(saveB); actions.appendChild(delB);
+    item.appendChild(ta); item.appendChild(actions);
+    commentsList.appendChild(item);
+  });
+}
+// original handler replaced by enhanced version
+
+// === Enhancements: Export JSON & Named Comments ===
+function exportJSONData(){
+  try{
+    const d = structuredClone(data);
+    // Capture unsaved edits currently in the editor into the clone (so export = latest on-screen)
+    const enField = document.getElementById("enField");
+    const arField = document.getElementById("arField");
+    if(current.country && current.section && (enField || arField)){
+      const entry = (((d||{}).countries||{})[current.country]||{}).sections?.[current.section];
+      if(entry){
+        if(enField) entry.en = enField.value;
+        if(arField) entry.ar = arField.value;
+      }
+    }
+    const blob = new Blob([JSON.stringify(d, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "destinations_data.json";
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+  }catch(e){
+    alert("Export failed: " + (e && e.message ? e.message : e));
+  }
+}
+
+(function(){
+  try{
+    const topBtn = document.getElementById("exportJsonTop");
+    if(topBtn){ topBtn.addEventListener("click", exportJSONData); }
+    if(typeof exportJSONBtn !== "undefined" && exportJSONBtn){
+      exportJSONBtn.addEventListener("click", exportJSONData);
+    }
+  }catch(e){}
+})();
+
+// Update comments to include author name
+const commentAuthorInp = document.getElementById("commentAuthor");
+function renderComments(){
+  commentsList.innerHTML = "";
+  if(!comments.length){
+    commentsList.innerHTML = `<div class="muted">No comments yet.</div>`;
+    return;
+  }
+  comments.forEach((c, idx)=>{
+    const item = document.createElement("div");
+    item.className = "item";
+
+    const meta = document.createElement("div");
+    const safeName = (c.name && typeof c.name === 'string') ? c.name.replace(/[&<>"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s])) : "Anonymous";
+    const when = new Date(c.time||Date.now()).toLocaleString();
+    meta.innerHTML = `<b>${safeName}</b> <span class="muted-inline">— ${when}</span>`;
+    item.appendChild(meta);
+
+    const ta = document.createElement("textarea");
+    ta.value = c.text || "";
+    ta.addEventListener("input", ()=> c.text = ta.value);
+
+    const actions = document.createElement("div");
+    actions.className = "comment-actions";
+    const saveB = document.createElement("button");
+    saveB.className = "btn success"; saveB.textContent = "Save";
+    saveB.addEventListener("click", ()=>{ comments[idx].text = ta.value; saveComments(); renderComments(); });
+    const delB = document.createElement("button");
+    delB.className = "btn danger"; delB.textContent = "Delete";
+    delB.addEventListener("click", ()=>{ comments.splice(idx,1); saveComments(); renderComments(); });
+    actions.appendChild(saveB); actions.appendChild(delB);
+
+    item.appendChild(ta);
+    item.appendChild(actions);
+    commentsList.appendChild(item);
+  });
+}
+
+addCommentBtn.addEventListener("click", ()=>{
+  const t = (newCommentInp.value||"").trim();
+  const nm = (commentAuthorInp && commentAuthorInp.value || "").trim() || "Anonymous";
+  if(!t) return;
+  comments.push({ name: nm, text: t, time: Date.now() });
+  saveComments();
+  if(commentAuthorInp) commentAuthorInp.value = "";
+  newCommentInp.value = "";
+  renderComments();
+});
+
+
+searchInput.addEventListener("input", (e)=>{
+  const val = e.target.value;
+  globalSearch.value = val;
+  buildNav(val);
+});
+globalSearch.addEventListener("input", (e)=>{
+  const val = e.target.value;
+  searchInput.value = val;
+  buildNav(val);
+});
+
+function parseHashBoot(){
+  const parsed = parseHash();
+  if(parsed){ current = parsed; }
+  else{
+    const firstCountry = (data.order && data.order[0]) || Object.keys(data.countries)[0];
+    const firstSection = (data.countries[firstCountry].order && data.countries[firstCountry].order[0])
+      || Object.keys(data.countries[firstCountry].sections)[0];
+    current = { country: firstCountry, section: firstSection, mode: getSavedLang() || "en" };
+    setHash(current.country, current.section, current.mode);
+  }
+}
+(function boot(){
+  buildNav();
+  parseHashBoot();
+  hydrateLangButtons();
+  updateCrumb();
+  renderContent();
+  renderComments();
+})();
+</script>
+<!-- Append-only enhancements: admin gate, move buttons, logout, export embed -->
+<script>
+(function(){
+  try{
+    // Run after DOM ready
+    function onReady(fn){ if(document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+    onReady(function(){
+      var adminFab   = document.getElementById('adminFab');
+      var adminPanel = document.getElementById('adminPanel');
+      var toolbar    = document.querySelector('.toolbar .right');
+      var editBtn    = document.getElementById('editBtn');
+      var saveBtn    = document.getElementById('saveBtn');
+      var exportBtn  = document.getElementById('exportBtn');
+
+      if(!adminPanel || !adminFab) return;
+
+      // -------- Status (top) --------
+      var authRow = document.createElement('div');
+      authRow.className = 'row';
+      authRow.id = 'adminAuthRow';
+      var status = document.createElement('span');
+      status.className = 'muted-inline';
+      status.id = 'adminStatus';
+      status.textContent = 'Not signed in';
+      authRow.appendChild(status);
+      adminPanel.insertBefore(authRow, adminPanel.firstChild);
+
+      function isAuthed(){ return sessionStorage.getItem('adminAuthed') === '1'; }
+      function setAuthed(user){
+        sessionStorage.setItem('adminAuthed', '1');
+        if(user) sessionStorage.setItem('adminUser', user);
+        updateAdminStatus();
+      }
+      function clearAuth(){
+        sessionStorage.removeItem('adminAuthed');
+        sessionStorage.removeItem('adminUser');
+        updateAdminStatus();
+      }
+      function updateAdminStatus(){
+        try{
+          var user = sessionStorage.getItem('adminUser');
+          var st = document.getElementById('adminStatus');
+          if(st) st.textContent = (isAuthed() && user) ? ('Signed in as: ' + user) : 'Not signed in';
+        }catch(e){}
+      }
+      updateAdminStatus();
+
+      // -------- Editing group (top): move Edit & Save into panel --------
+      if(editBtn || saveBtn){
+        var gTitle = document.createElement('div');
+        gTitle.className = 'group-title';
+        gTitle.textContent = 'Editing';
+        adminPanel.insertBefore(gTitle, authRow.nextSibling);
+
+        var row = document.createElement('div');
+        row.className = 'row';
+        // Move nodes (not clone) so original listeners remain intact
+        if(editBtn){ row.appendChild(editBtn); }
+        if(saveBtn){ row.appendChild(saveBtn); }
+        adminPanel.insertBefore(row, gTitle.nextSibling);
+      }
+
+      // -------- Logout (bottom) --------
+      var logoutRow = document.createElement('div');
+      logoutRow.className = 'row';
+      logoutRow.style.marginTop = '12px';
+      var logoutBtn = document.createElement('button');
+      logoutBtn.className = 'btn';
+      logoutBtn.id = 'logoutBtn';
+      logoutBtn.textContent = 'Logout';
+      logoutRow.appendChild(logoutBtn);
+      adminPanel.appendChild(logoutRow);
+      logoutBtn.addEventListener('click', function(){
+        try{
+          clearAuth();
+          adminPanel.classList.remove('show');
+          alert('Logged out.');
+        }catch(e){}
+      });
+
+      // -------- Admin gate (capture-phase; ONLY when opening) --------
+      adminFab.addEventListener('click', function(e){
+        try{
+          var open = adminPanel.classList.contains('show');
+          if(!open && !isAuthed()){
+            var u = prompt('Enter username:');
+            if(u === null){ e.stopImmediatePropagation(); e.preventDefault(); return; }
+            var p = prompt('Enter password:');
+            if(p === null){ e.stopImmediatePropagation(); e.preventDefault(); return; }
+            if(u === 'admin' && p === '1234'){
+              setAuthed(u);
+            }else{
+              alert('Access denied. Invalid username or password.');
+              e.stopImmediatePropagation(); e.preventDefault(); return;
+            }
+          }
+        }catch(err){}
+      }, true);
+
+      // -------- Export override: embed latest localStorage data --------
+      if(exportBtn){
+        exportBtn.addEventListener('click', function(ev){
+          try{
+            ev.stopImmediatePropagation(); ev.preventDefault();
+            var STORAGE_KEY = 'destinations_bilingual_data_v1';
+            var ls = localStorage.getItem(STORAGE_KEY);
+            var exportData = null;
+            try{ exportData = ls ? JSON.parse(ls) : (window.data || {}); }catch(e){ exportData = (window.data || {}); }
+
+            // Clean transient 'show' states before snapshot
+            try{ document.getElementById('adminPanel').classList.remove('show'); }catch(e){}
+            try{ document.getElementById('sidebar').classList.remove('show'); }catch(e){}
+
+            var serializer = function(obj){ return JSON.stringify(obj, null, 2); };
+            var html = document.documentElement.outerHTML
+              .replace(/const initialSnapshot = {[\s\S]*?};/, 'const initialSnapshot = ' + serializer(exportData) + ';');
+            var blob = new Blob(['<!DOCTYPE html>\\n' + html], {type:'text/html'});
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'interactive_destinations_bilingual.html';
+            a.click();
+            setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1500);
+          }catch(err){
+            alert('Export failed: ' + err);
+          }
+        }, true);
+      }
+    });
+  }catch(err){/* swallow */}
+})();
+</script>
+<script>
+// Move Reset into Admin Panel
+var adminPanel = document.getElementById('adminPanel');
+var resetBtn = document.getElementById('resetBtn');
+if (adminPanel && resetBtn) {
+  var row = adminPanel.querySelector('.group-title + .row');
+  if (row) row.appendChild(resetBtn);
+}
+
+// Enable Export JSON / Import JSON
+const exportJSONBtn = document.getElementById("exportJSON");
+const importJSONBtn = document.getElementById("importJSON");
+
+if (exportJSONBtn) {
+  exportJSONBtn.addEventListener("click", () => {
+    try {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "destinations_data.json";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+    } catch (e) {
+      alert("Export JSON failed: " + e.message);
+    }
+  });
+}
+
+if (importJSONBtn) {
+  importJSONBtn.addEventListener("click", () => {
+    const inp = document.createElement("input");
+    inp.type = "file";
+    inp.accept = ".json,application/json";
+    inp.addEventListener("change", async () => {
+      const file = inp.files && inp.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (!parsed || !parsed.countries) throw new Error("Invalid JSON shape.");
+        pushUndo();
+        data = parsed;
+        saveData();
+        buildNav(searchInput.value);
+        renderContent();
+        alert("JSON imported successfully.");
+      } catch (e) {
+        alert("Import JSON failed: " + e.message);
+      }
+    });
+    inp.click();
+  });
+}
+
+// Remove duplicate Logout
+var existingLogout = document.getElementById('logoutBtn');
+if (existingLogout) {
+  var allLogout = document.querySelectorAll('#logoutBtn');
+  for (let i = 1; i < allLogout.length; i++) {
+    allLogout[i].remove();
+  }
+}
+</script></body></html>
